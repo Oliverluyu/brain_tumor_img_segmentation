@@ -100,19 +100,19 @@ def main(arguments):
         train_loader = DataLoader(train_dataset, batch_size=data_opts.train_batch_size, shuffle=True)
         val_loader = DataLoader(val_dataset, batch_size=data_opts.test_batch_size, shuffle=False)
 
-        MyModel = model_opts.model_name
-        model = MyModel(model_opts.feature_scale, model_opts.n_classes, model_opts.is_deconv, model_opts.in_channels,
+        myModel = get_model(model_opts.model_name)
+        model = myModel(model_opts.feature_scale, model_opts.n_classes, model_opts.is_deconv, model_opts.in_channels,
                         is_batchnorm=model_opts.is_batchnorm, mode=train_opts.task).to(device)
         try:
             save_path = os.path.join('saved_models', model_opts.pretrained_model)
-            model.load_state_dict(torch.load(save_path)['model_state_dict'], strict=False)
+            model.load_state_dict(torch.load(save_path)['model_state_dict'], strict=False) # initialize overlapping part
         except Exception as error:
             print('Caught this error when initialized pretrained model: ' + repr(error))
 
         # freeze the encoder part of the pretrained classification model
         model.freeze_encoder()
 
-        loss_fn = torch.nn.CrossEntropyLoss()  # Change Loss Function accordingly for segmentation task!!
+        loss_fn = torch.nn.CrossEntropyLoss()  # Can change Loss Function accordingly for segmentation task!!
         # initialize optimizer excluding frozen parameters
         optimizer = optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=1e-4)
 

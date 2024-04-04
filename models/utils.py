@@ -58,7 +58,7 @@ class UnetUp_Concat(nn.Module):
     def __init__(self, in_size, out_size, is_batchnorm=True):
         super(UnetUp_Concat, self).__init__()
         self.conv = UnetConv(in_size + out_size, out_size, is_batchnorm, kernel_size=(3,3), padding_size=(1,1))
-        self.up = nn.Upsample(scale_factor=(2, 2), mode='bilinear')
+        self.up = nn.Upsample(scale_factor=(2, 2), mode='bilinear', align_corners=False)
 
         # initialise the blocks
         for m in self.children():
@@ -138,14 +138,14 @@ class GridAttentionBlock(nn.Module):
 
         # g (b, c, t', h', w') -> phi_g (b, i_c, t', h', w')
         #  Relu(theta_x + phi_g + bias) -> f = (b, i_c, thw) -> (b, i_c, t/s1, h/s2, w/s3)
-        phi_g = F.upsample(self.phi(g), size=theta_x_size[2:], mode=self.upsample_mode)
+        phi_g = F.interpolate(self.phi(g), size=theta_x_size[2:], mode=self.upsample_mode)
         f = F.relu(theta_x + phi_g, inplace=True)
 
         #  psi^T * f -> (b, psi_i_c, t/s1, h/s2, w/s3)
-        sigm_psi_f = F.sigmoid(self.psi(f))
+        sigm_psi_f = torch.sigmoid(self.psi(f))
 
         # upsample the attentions and multiply
-        sigm_psi_f = F.upsample(sigm_psi_f, size=input_size[2:], mode=self.upsample_mode)
+        sigm_psi_f = F.interpolate(sigm_psi_f, size=input_size[2:], mode=self.upsample_mode)
         y = sigm_psi_f.expand_as(x) * x
         out_y = self.outputLayer(y)
 

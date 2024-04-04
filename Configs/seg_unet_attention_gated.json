@@ -1,13 +1,14 @@
 {
   "training": {
     "task": "segmentation",
-    "epochs": 20,
+    "epochs": 2,
     "lr_policy": "step",
     "lr_decay_iters": 250,
     "preloadData": true
   },
   "data": {
     "root_dir": "datasets/segmentation",
+    "with_notumour": true,
     "train_batch_size": 24,
     "test_batch_size": 24,
     "seed": 42
@@ -19,7 +20,7 @@
     "is_deconv": true,
     "in_channels": 3,
     "is_batchnorm": true,
-    "save_model_name": "attention_unet_best_segmentation.pth",
+    "save_model_name": "attention_unet_best_segmentation_wth_notum.pth",
     "pretrained_model": "attention_unet_best_classification.pth"
   },
   "transform": {
