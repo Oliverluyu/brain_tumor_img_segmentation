@@ -1,8 +1,8 @@
 import torch
 import torch.nn as nn
-from .utils import UnetConv, UnetUp_Concat
+from models.utils import UnetConv, UnetUp_Concat
 import torch.nn.functional as F
-from .network_helper import init_weights
+from models.network_helper import init_weights
 
 
 class unet_2D(nn.Module):
@@ -39,6 +39,7 @@ class unet_2D(nn.Module):
         self.global_pool = nn.AdaptiveAvgPool2d(1)
         self.classifier = nn.Linear(filters[4], n_classes)
 
+
         # decoder for segmentation
         # upsampling
         self.up_concat4 = UnetUp_Concat(filters[4], filters[3], self.is_deconv)
@@ -48,6 +49,7 @@ class unet_2D(nn.Module):
 
         # final conv (without any concat)
         self.final = nn.Conv2d(filters[0], self.in_channels, 1)
+        self.segmentation = nn.Conv2d(self.in_channels, 1,1)
 
         # initialise weights
         for m in self.modules():
@@ -75,7 +77,13 @@ class unet_2D(nn.Module):
             pooled = self.global_pool(center)
             pooled = torch.flatten(pooled, 1)
             classification_output = self.classifier(pooled)
-            return classification_output
+            up4 = self.up_concat4(conv4, center)
+            up3 = self.up_concat3(conv3, up4)
+            up2 = self.up_concat2(conv2, up3)
+            up1 = self.up_concat1(conv1, up2)
+            final = self.final(up1)
+
+            return classification_output, final
 
         elif self.mode == 'segmentation':
             up4 = self.up_concat4(conv4, center)
@@ -84,6 +92,10 @@ class unet_2D(nn.Module):
             up1 = self.up_concat1(conv1, up2)
 
             final = self.final(up1)
+            # print(final.shape)
+            final = self.segmentation(final)
+            # print(final.shape)
+
             return final
 
     def freeze_encoder(self):
