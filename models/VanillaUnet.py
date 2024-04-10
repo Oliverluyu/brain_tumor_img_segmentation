@@ -93,7 +93,7 @@ class unet_2D(nn.Module):
 
             final = self.final(up1)
             # print(final.shape)
-            final = self.segmentation(final)
+            # final = self.segmentation(final)
             # print(final.shape)
 
             return final
