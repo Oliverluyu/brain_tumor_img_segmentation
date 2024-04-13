@@ -200,7 +200,7 @@ def main(arguments):
                 # print (f" printing :{pretrained_dict.items()}")
 
                 for key, value in pretrained_model_state.items():
-                    print (f" key :{key}")
+                    # print (f" key :{key}")
                     if any(key.startswith(layer) for layer in transfer_layers):
                         if key in new_state_dict:
                             new_state_dict[key] = value
