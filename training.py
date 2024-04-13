@@ -188,7 +188,7 @@ def main(arguments):
                 pretrained_dict = torch.load(save_path)
                 new_state_dict = model.state_dict()  
                 transfer_layers = model_opts.transfer_layers
-                print (f" printing :{pretrained_dict.items()}")
+                # print (f" printing :{pretrained_dict.items()}")
 
                 for key, value in pretrained_dict.items():
                     print (f" key :{pretrained_dict.items()}")
