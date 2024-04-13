@@ -9,23 +9,32 @@ from tqdm import tqdm
 # import matplotlib.pyplot as plt
 
 
-def validate(model, dataloader, loss_fn, device):
+def validate(model, dataloader, loss_fn, device, task):
     model.eval()
     val_loss_sum = 0
     total_samples = 0
 
     with torch.no_grad():
-        for image, target in dataloader:
-            image, target = image.to(device), target.to(device)
-            output = model(image)
-            loss = loss_fn(output, target)
-            val_loss_sum += loss.item() * image.size(0)
-            total_samples += image.size(0)
+        if task == 'segmentation':
+            for image, target in dataloader:
+                image, target = image.to(device), target.to(device)
+                output = model(image)
+                loss = loss_fn(output, target)
+                val_loss_sum += loss.item() * image.size(0)
+                total_samples += image.size(0)
 
-            # acculate accuracy
-            # _, predicts = torch.max(output, dim=1)
-            # acc = torch.sum(predicts == target).item() / len(target)
-            # val_acc_list.append(acc)
+                # acculate accuracy
+                # _, predicts = torch.max(output, dim=1)
+                # acc = torch.sum(predicts == target).item() / len(target)
+                # val_acc_list.append(acc)
+
+        elif task == 'classification':
+            for image, labels in dataloader:
+                image, labels = image.to(device), labels.to(device)
+                output,_ = model(image)
+                loss = loss_fn(output, labels)
+                val_loss_sum += loss.item() * image.size(0)
+                total_samples += image.size(0)
 
     average_val_loss = val_loss_sum / total_samples
     return average_val_loss
@@ -65,7 +74,7 @@ def train(model, train_loader, val_loader, task, optimizer, loss_fn, device, epo
     average_train_loss = total_loss / total_train_samples
 
     # validate after one epoch training
-    average_val_loss = validate(model, val_loader, loss_fn, device)
+    average_val_loss = validate(model, val_loader, loss_fn, device, task)
 
     # checkpointing
     if average_val_loss < best_eval_loss:
