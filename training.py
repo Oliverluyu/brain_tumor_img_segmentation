@@ -13,6 +13,7 @@ def validate(model, dataloader, loss_fn, device, task):
     model.eval()
     val_loss_sum = 0
     total_samples = 0
+    correct_predictions = 0
 
     with torch.no_grad():
         if task == 'segmentation':
@@ -23,22 +24,24 @@ def validate(model, dataloader, loss_fn, device, task):
                 val_loss_sum += loss.item() * image.size(0)
                 total_samples += image.size(0)
 
-                # acculate accuracy
-                # _, predicts = torch.max(output, dim=1)
-                # acc = torch.sum(predicts == target).item() / len(target)
-                # val_acc_list.append(acc)
-
         elif task == 'classification':
             for image, labels in dataloader:
                 image, labels = image.to(device), labels.to(device)
-                output,_ = model(image)
+                output, _ = model(image)
                 loss = loss_fn(output, labels)
                 val_loss_sum += loss.item() * image.size(0)
                 total_samples += image.size(0)
 
-    average_val_loss = val_loss_sum / total_samples
-    return average_val_loss
+                # Calculate accuracy
+                _, predicted = torch.max(output.data, 1)
+                correct_predictions += (predicted == labels).sum().item()
 
+    average_val_loss = val_loss_sum / total_samples
+    if task == 'classification':
+        val_accuracy = 100 * correct_predictions / total_samples
+        return average_val_loss, val_accuracy
+    else:
+        return average_val_loss
 
 def train(model, train_loader, val_loader, task, optimizer, loss_fn, device, epoch, save_model_name):
     total_loss = 0
@@ -73,8 +76,13 @@ def train(model, train_loader, val_loader, task, optimizer, loss_fn, device, epo
 
     average_train_loss = total_loss / total_train_samples
 
-    # validate after one epoch training
-    average_val_loss = validate(model, val_loader, loss_fn, device, task)
+    # validate after one epoch of training
+    results = validate(model, val_loader, loss_fn, device, task)
+    if task == 'classification':
+        average_val_loss, val_accuracy = results
+        print(f"Validation Accuracy: {val_accuracy:.2f}%")
+    else:
+        average_val_loss = results
 
     # checkpointing
     if average_val_loss < best_eval_loss:
@@ -88,6 +96,7 @@ def train(model, train_loader, val_loader, task, optimizer, loss_fn, device, epo
         torch.save(save_dict, save_path)
 
     return average_train_loss, average_val_loss
+
 
 
 def main(arguments):
