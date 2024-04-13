@@ -194,15 +194,32 @@ def main(arguments):
 
     print("Training of ", train_opts.task, " is finished!!!")
 
-def train_val_loss_plot(train_loss_values, val_loss_values):
-    # plt.plot(range(1, len(train_loss_values) + 1), train_loss_values, label="Train Loss")
-    # plt.plot(range(1, len(val_loss_values) + 1), val_loss_values, label="Validation Loss")
-    # plt.xlabel("Epoch")
-    # plt.ylabel("Loss")
-    # plt.title("Train and Validation Loss vs. Number of Epochs")
-    # plt.legend()
-    # plt.show()
-    pass
+def train_val_loss_plot(train_loss_values, val_loss_values, val_accuracy_values=None):
+    epochs = range(1, len(train_loss_values) + 1)
+
+    plt.figure(figsize=(10, 5))
+
+    # Plot training and validation loss
+    plt.subplot(1, 2, 1)
+    plt.plot(epochs, train_loss_values, 'b-', label='Training Loss')
+    plt.plot(epochs, val_loss_values, 'r-', label='Validation Loss')
+    plt.title('Training and Validation Loss')
+    plt.xlabel('Epochs')
+    plt.ylabel('Loss')
+    plt.legend(loc='upper right')
+
+    # Plot validation accuracy if data is provided
+    if val_accuracy_values:
+        plt.subplot(1, 2, 2)
+        plt.plot(epochs, val_accuracy_values, 'g-', label='Validation Accuracy')
+        plt.title('Validation Accuracy')
+        plt.xlabel('Epochs')
+        plt.ylabel('Accuracy (%)')
+        plt.legend(loc='upper left')
+
+    plt.tight_layout()
+    plt.show()
+
 
 
 if __name__ == '__main__':
