@@ -91,8 +91,7 @@ def train(model, train_loader, val_loader, task, optimizer, loss_fn, device, epo
 
 
 def main(arguments):
-    # device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    device = torch.device('cuda' if torch.cuda.is_available() else 'mps')
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     json_opts = json_to_py_obj(arguments.config)
     train_opts = json_opts.training
