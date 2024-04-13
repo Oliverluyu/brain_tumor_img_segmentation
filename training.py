@@ -6,8 +6,32 @@ from tumour_seg_dataset import tumourSegmentationDataset
 from torch import optim
 from models import *
 from tqdm import tqdm
-# import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 
+def train_val_loss_plot(train_loss_values, val_loss_values, val_accuracy_values):
+    epochs = range(1, len(train_loss_values) + 1)
+    
+    plt.figure(figsize=(10, 5))
+    
+    # Plot training and validation loss
+    plt.subplot(1, 2, 1)
+    plt.plot(epochs, train_loss_values, 'b', label='Training Loss')
+    plt.plot(epochs, val_loss_values, 'r', label='Validation Loss')
+    plt.title('Training and Validation Loss')
+    plt.xlabel('Epochs')
+    plt.ylabel('Loss')
+    plt.legend()
+
+    # Plot validation accuracy
+    plt.subplot(1, 2, 2)
+    plt.plot(epochs, val_accuracy_values, 'g', label='Validation Accuracy')
+    plt.title('Validation Accuracy')
+    plt.xlabel('Epochs')
+    plt.ylabel('Accuracy (%)')
+    plt.legend()
+
+    plt.tight_layout()
+    plt.show()
 
 def validate(model, dataloader, loss_fn, device, task):
     model.eval()
@@ -80,7 +104,7 @@ def train(model, train_loader, val_loader, task, optimizer, loss_fn, device, epo
     results = validate(model, val_loader, loss_fn, device, task)
     if task == 'classification':
         average_val_loss, val_accuracy = results
-        print(f"Validation Accuracy: {val_accuracy:.2f}%")
+        # print(f"Validation Accuracy: {val_accuracy:.2f}%")
     else:
         average_val_loss = results
 
@@ -148,16 +172,27 @@ def main(arguments):
 
     train_loss_list = []
     val_loss_list = []
+    val_accuracy_list = []  # Initialize list to store validation accuracies
 
     for epoch in range(1, train_opts.epochs + 1):
         train_loss, val_loss = train(model, train_loader, val_loader, train_opts.task, optimizer, loss_fn, device, epoch, model_opts.save_model_name)
         train_loss_list.append(train_loss)
         val_loss_list.append(val_loss)
+        if train_opts.task == 'classification':
+            _, val_accuracy = validate(model, val_loader, loss_fn, device, train_opts.task)
+            val_accuracy_list.append(val_accuracy)
         print(f"Epoch: {epoch}; train loss: {train_loss:.4f}; validation loss: {val_loss:.4f}")
 
-    # train_val_loss_plot(train_loss_list, val_loss_list)  # visualize training and validation loss
-    print("Training of ", train_opts.task, " is finished!!!")
+        if train_opts.task == 'classification':
+            print(f"Validation Accuracy: {val_accuracy:.2f}%")
 
+    # Plot losses and accuracy at the end of training
+    if train_opts.task == 'classification':
+        train_val_loss_plot(train_loss_list, val_loss_list, val_accuracy_list)
+    else:
+        train_val_loss_plot(train_loss_list, val_loss_list, [])  # Only plot loss for segmentation task
+
+    print("Training of ", train_opts.task, " is finished!!!")
 
 def train_val_loss_plot(train_loss_values, val_loss_values):
     # plt.plot(range(1, len(train_loss_values) + 1), train_loss_values, label="Train Loss")

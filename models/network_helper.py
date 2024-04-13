@@ -36,7 +36,7 @@ def weights_init_kaiming(m):
         init.kaiming_normal_(m.weight.data, a=0, mode='fan_in')
     elif classname.find('BatchNorm') != -1:
         init.normal_(m.weight.data, 1.0, 0.02)
-        init.constant(m.bias.data, 0.0)
+        init.constant_(m.bias.data, 0.0)
 
 
 def weights_init_orthogonal(m):
