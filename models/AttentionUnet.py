@@ -63,6 +63,7 @@ class unet_CT_single_att(nn.Module):
 
         # final conv (without any concat)
         self.final = nn.Conv2d(filters[0], self.in_channels, 1)
+        self.segmentation = nn.Conv2d(self.in_channels, 1,1)
 
         # initialise weights
         for m in self.modules():
@@ -114,6 +115,7 @@ class unet_CT_single_att(nn.Module):
             # final = self.final(torch.cat([dsv1,dsv2,dsv3,dsv4], dim=1))
 
             final = self.final(up1)
+            final = self.segmentation(final)
 
             return final
 

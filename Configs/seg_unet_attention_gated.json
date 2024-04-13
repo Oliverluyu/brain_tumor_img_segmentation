@@ -1,7 +1,8 @@
 {
   "training": {
     "task": "segmentation",
-    "epochs": 2,
+    "transfer_learning": false,
+    "epochs": 20,
     "lr_policy": "step",
     "lr_decay_iters": 250,
     "preloadData": true

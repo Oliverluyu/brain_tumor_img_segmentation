@@ -59,6 +59,6 @@ class tumourSegmentationDataset(data.Dataset):
         if self.target_transform:
             target = self.target_transform(target)
 
-        target = target.squeeze().long()  # remove channel dimension and convert masks to long
+        # target = target.squeeze().long()  # convert masks to long
 
         return image, target

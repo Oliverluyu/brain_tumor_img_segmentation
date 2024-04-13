@@ -6,35 +6,38 @@ from tumour_seg_dataset import tumourSegmentationDataset
 from torch import optim
 from models import *
 from tqdm import tqdm
+# import matplotlib.pyplot as plt
 
 
 def validate(model, dataloader, loss_fn, device):
     model.eval()
-    val_loss_list = []
-    val_acc_list = []
+    val_loss_sum = 0
+    total_samples = 0
 
     with torch.no_grad():
         for image, target in dataloader:
             image, target = image.to(device), target.to(device)
             output = model(image)
             loss = loss_fn(output, target)
-            val_loss_list.append(loss.item())
+            val_loss_sum += loss.item() * image.size(0)
+            total_samples += image.size(0)
 
             # acculate accuracy
             # _, predicts = torch.max(output, dim=1)
             # acc = torch.sum(predicts == target).item() / len(target)
             # val_acc_list.append(acc)
 
-    return np.mean(val_loss_list)
+    average_val_loss = val_loss_sum / total_samples
+    return average_val_loss
 
 
 def train(model, train_loader, val_loader, optimizer, loss_fn, device, epoch, save_model_name):
-    model.train()
     total_loss = 0
-    step = 0
-    # save model
+    total_train_samples = 0
+
+    # save model path
     save_path = os.path.join('saved_models', save_model_name)
-    best_eval_loss = torch.load(save_path)['eval_loss'] if epoch > 1 else 9999
+    best_eval_loss = torch.load(save_path)['eval_loss'] if os.path.exists(save_path) and epoch > 1 else float('inf')
 
     for image, target in tqdm(train_loader):
         image, target = image.to(device), target.to(device)
@@ -43,32 +46,26 @@ def train(model, train_loader, val_loader, optimizer, loss_fn, device, epoch, sa
         loss = loss_fn(output, target)
         loss.backward()
         optimizer.step()
-        total_loss += loss.item()
+        total_loss += loss.item() * image.size(0)
+        total_train_samples += image.size(0)
 
-        step += 1
+    average_train_loss = total_loss / total_train_samples
 
-        if step % 50 == 0:
-            last_loss = total_loss / 50  # train loss per batch
-            print(f"\nepoch: {epoch}, step: {step}, train loss: {last_loss}")
-            total_loss = 0.
+    # validate after one epoch training
+    average_val_loss = validate(model, val_loader, loss_fn, device)
 
-            curr_eval_loss = validate(model, val_loader, loss_fn, device)
-            print(f"epoch: {epoch}, step: {step}, eval loss: {curr_eval_loss}")
+    # checkpointing
+    if average_val_loss < best_eval_loss:
+        best_eval_loss = average_val_loss
+        save_dict = {
+            "model_state_dict": model.state_dict(),
+            "optimizer_state_dict": optimizer.state_dict(),
+            "eval_loss": best_eval_loss,
+            "epoch": epoch,
+        }
+        torch.save(save_dict, save_path)
 
-            # early stop
-            if curr_eval_loss < best_eval_loss:
-                best_eval_loss = curr_eval_loss
-
-                # put eval loss and acc in model state dict
-                save_dict = {
-                    "model_state_dict": model.state_dict(),
-                    "optimizer_state_dict": optimizer.state_dict(),
-                    "eval_loss": curr_eval_loss,
-                    "epoch": epoch,
-                }
-                torch.save(save_dict, save_path)
-            # switch to train mode
-            model.train()
+    return average_train_loss, average_val_loss
 
 
 def main(arguments):
@@ -103,24 +100,43 @@ def main(arguments):
         myModel = get_model(model_opts.model_name)
         model = myModel(model_opts.feature_scale, model_opts.n_classes, model_opts.is_deconv, model_opts.in_channels,
                         is_batchnorm=model_opts.is_batchnorm, mode=train_opts.task).to(device)
-        try:
-            save_path = os.path.join('saved_models', model_opts.pretrained_model)
-            model.load_state_dict(torch.load(save_path)['model_state_dict'], strict=False) # initialize overlapping part
-        except Exception as error:
-            print('Caught this error when initialized pretrained model: ' + repr(error))
 
-        # freeze the encoder part of the pretrained classification model
-        model.freeze_encoder()
+        if train_opts.transfer_learning:
+            try:
+                save_path = os.path.join('saved_models', model_opts.pretrained_model)
+                model.load_state_dict(torch.load(save_path)['model_state_dict'], strict=False) # initialize overlapping part
+            except Exception as error:
+                print('Caught this error when initialized pretrained model: ' + repr(error))
 
-        loss_fn = torch.nn.CrossEntropyLoss()  # Can change Loss Function accordingly for segmentation task!!
+            # freeze the encoder part of the pretrained classification model
+            model.freeze_encoder()
+
+        loss_fn = torch.nn.BCEWithLogitsLoss()  # Can change Loss Function accordingly for segmentation task!!
         # initialize optimizer excluding frozen parameters
         optimizer = optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=1e-4)
 
-    for epoch in range(1, train_opts.epochs + 1):
-        print("\nEpoch :", epoch)
-        train(model, train_loader, val_loader, optimizer, loss_fn, device, epoch, model_opts.save_model_name)
+    train_loss_list = []
+    val_loss_list = []
 
+    for epoch in range(1, train_opts.epochs + 1):
+        train_loss, val_loss = train(model, train_loader, val_loader, optimizer, loss_fn, device, epoch, model_opts.save_model_name)
+        train_loss_list.append(train_loss)
+        val_loss_list.append(val_loss)
+        print(f"Epoch: {epoch}; train loss: {train_loss:.4f}; validation loss: {val_loss:.4f}")
+
+    # train_val_loss_plot(train_loss_list, val_loss_list)  # visualize training and validation loss
     print("Training of ", train_opts.task, " is finished!!!")
+
+
+def train_val_loss_plot(train_loss_values, val_loss_values):
+    # plt.plot(range(1, len(train_loss_values) + 1), train_loss_values, label="Train Loss")
+    # plt.plot(range(1, len(val_loss_values) + 1), val_loss_values, label="Validation Loss")
+    # plt.xlabel("Epoch")
+    # plt.ylabel("Loss")
+    # plt.title("Train and Validation Loss vs. Number of Epochs")
+    # plt.legend()
+    # plt.show()
+    pass
 
 
 if __name__ == '__main__':
