@@ -7,3 +7,5 @@ venv/
 reference/
 
 .DS_Store
+
+models/__pycache__
