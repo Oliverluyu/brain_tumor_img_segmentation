@@ -10,30 +10,52 @@ import matplotlib.pyplot as plt
 import datetime
 import os
 
-def train_val_loss_plot(train_loss_values, val_loss_values, val_accuracy_values):
-    epochs = range(1, len(train_loss_values) + 1)
-    
-    plt.figure(figsize=(10, 5))
-    
-    # Plot training and validation loss
-    plt.subplot(1, 2, 1)
-    plt.plot(epochs, train_loss_values, 'b', label='Training Loss')
-    plt.plot(epochs, val_loss_values, 'r', label='Validation Loss')
-    plt.title('Training and Validation Loss')
-    plt.xlabel('Epochs')
-    plt.ylabel('Loss')
-    plt.legend()
 
-    # Plot validation accuracy
-    plt.subplot(1, 2, 2)
-    plt.plot(epochs, val_accuracy_values, 'g', label='Validation Accuracy')
-    plt.title('Validation Accuracy')
-    plt.xlabel('Epochs')
-    plt.ylabel('Accuracy (%)')
-    plt.legend()
 
-    plt.tight_layout()
-    plt.show()
+# def train_val_loss_plot(train_loss_values, val_loss_values, val_accuracy_values):
+#     epochs = range(1, len(train_loss_values) + 1)
+    
+#     plt.figure(figsize=(10, 5))
+    
+#     # Plot training and validation loss
+#     plt.subplot(1, 2, 1)
+#     plt.plot(epochs, train_loss_values, 'b', label='Training Loss')
+#     plt.plot(epochs, val_loss_values, 'r', label='Validation Loss')
+#     plt.title('Training and Validation Loss')
+#     plt.xlabel('Epochs')
+#     plt.ylabel('Loss')
+#     plt.legend()
+
+#     # Plot validation accuracy
+#     plt.subplot(1, 2, 2)
+#     plt.plot(epochs, val_accuracy_values, 'g', label='Validation Accuracy')
+#     plt.title('Validation Accuracy')
+#     plt.xlabel('Epochs')
+#     plt.ylabel('Accuracy (%)')
+#     plt.legend()
+
+#     plt.tight_layout()
+#     plt.show()
+def apply_transfer_learning(model, config):
+    if config['training']['transfer_learning']:
+        try:
+            save_path = os.path.join('saved_models', config['model']['pretrained_model'])
+            pretrained_dict = torch.load(save_path)
+            new_state_dict = model.state_dict()
+            transfer_layers = config['model']['transfer_layers']
+
+            for key, value in pretrained_dict.items():
+                if any(key.startswith(layer) for layer in transfer_layers):
+                    if key in new_state_dict:
+                        new_state_dict[key] = value
+                        print(f"Transferred layer {key}")
+
+            model.load_state_dict(new_state_dict, strict=False)
+            print("Loaded pretrained weights for specified layers.")
+
+        except Exception as error:
+            print('Caught this error when initializing pretrained model: ' + repr(error))
+
 
 def validate(model, dataloader, loss_fn, device, task):
     model.eval()
@@ -161,12 +183,27 @@ def main(arguments):
         if train_opts.transfer_learning:
             try:
                 save_path = os.path.join('saved_models', model_opts.pretrained_model)
-                model.load_state_dict(torch.load(save_path)['model_state_dict'], strict=False) # initialize overlapping part
+                # model.load_state_dict(torch.load(save_path)['model_state_dict'], strict=False) # initialize overlapping part
+                pretrained_dict = torch.load(save_path)
+                new_state_dict = model.state_dict()  
+                transfer_layers = model_opts.transfer_layers
+
+                for key, value in pretrained_dict.items():
+                    if any(key.startswith(layer) for layer in transfer_layers):
+                        if key in new_state_dict:
+                            new_state_dict[key] = value
+                            print(f"Transferred layer {key}")
+
+                model.load_state_dict(new_state_dict, strict=False)
+                print("Loaded pretrained weights for specified layers.")
+            
+            
+            
             except Exception as error:
                 print('Caught this error when initialized pretrained model: ' + repr(error))
 
-            # freeze the encoder part of the pretrained classification model
-            model.freeze_encoder()
+            # # freeze the encoder part of the pretrained classification model
+            # model.freeze_encoder()
 
         loss_fn = torch.nn.BCEWithLogitsLoss()  # Can change Loss Function accordingly for segmentation task!!
         # initialize optimizer excluding frozen parameters
