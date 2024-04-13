@@ -148,7 +148,7 @@ def train(model, train_loader, val_loader, task, optimizer, loss_fn, device, epo
 
 
 def main(arguments):
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cuda')
 
     json_opts = json_to_py_obj(arguments.config)
     train_opts = json_opts.training
@@ -181,12 +181,14 @@ def main(arguments):
                         is_batchnorm=model_opts.is_batchnorm, mode=train_opts.task).to(device)
 
         if train_opts.transfer_learning:
+            print("applying transfer learning")
             try:
                 save_path = os.path.join('saved_models', model_opts.pretrained_model)
                 # model.load_state_dict(torch.load(save_path)['model_state_dict'], strict=False) # initialize overlapping part
                 pretrained_dict = torch.load(save_path)
                 new_state_dict = model.state_dict()  
                 transfer_layers = model_opts.transfer_layers
+                print (f" printing :{pretrained_dict.items()}")
 
                 for key, value in pretrained_dict.items():
                     if any(key.startswith(layer) for layer in transfer_layers):
