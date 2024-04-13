@@ -7,6 +7,8 @@ from torch import optim
 from models import *
 from tqdm import tqdm
 import matplotlib.pyplot as plt
+import datetime
+import os
 
 def train_val_loss_plot(train_loss_values, val_loss_values, val_accuracy_values):
     epochs = range(1, len(train_loss_values) + 1)
@@ -194,8 +196,12 @@ def main(arguments):
 
     print("Training of ", train_opts.task, " is finished!!!")
 
-def train_val_loss_plot(train_loss_values, val_loss_values, val_accuracy_values=None):
+
+def train_val_loss_plot(train_loss_values, val_loss_values, val_accuracy_values=None, save_model_name='model_performance', save_dir='saved_models'):
     epochs = range(1, len(train_loss_values) + 1)
+    current_time = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+    filename = f"{save_model_name}_{current_time}.png"
+    save_path = os.path.join(save_dir, filename)
 
     plt.figure(figsize=(10, 5))
 
@@ -218,7 +224,10 @@ def train_val_loss_plot(train_loss_values, val_loss_values, val_accuracy_values=
         plt.legend(loc='upper left')
 
     plt.tight_layout()
+    plt.savefig(save_path)  # Save the figure
     plt.show()
+    print(f"Plot saved to {save_path}")
+
 
 
 
