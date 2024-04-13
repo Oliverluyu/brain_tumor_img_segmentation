@@ -186,11 +186,20 @@ def main(arguments):
                 save_path = os.path.join('saved_models', model_opts.pretrained_model)
                 # model.load_state_dict(torch.load(save_path)['model_state_dict'], strict=False) # initialize overlapping part
                 pretrained_dict = torch.load(save_path)
+                '''
+                pretrained_dict
+                :model_state_dict
+                :optimizer_state_dict
+                :eval_loss
+                :epoch
+                '''
+                # Access the model's state dictionary specifically
+                pretrained_model_state = pretrained_dict['model_state_dict']
                 new_state_dict = model.state_dict()  
                 transfer_layers = model_opts.transfer_layers
                 # print (f" printing :{pretrained_dict.items()}")
 
-                for key, value in pretrained_dict.items():
+                for key, value in pretrained_model_state.items():
                     print (f" key :{key}")
                     if any(key.startswith(layer) for layer in transfer_layers):
                         if key in new_state_dict:
