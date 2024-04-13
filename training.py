@@ -31,23 +31,36 @@ def validate(model, dataloader, loss_fn, device):
     return average_val_loss
 
 
-def train(model, train_loader, val_loader, optimizer, loss_fn, device, epoch, save_model_name):
+def train(model, train_loader, val_loader, task, optimizer, loss_fn, device, epoch, save_model_name):
     total_loss = 0
     total_train_samples = 0
 
     # save model path
     save_path = os.path.join('saved_models', save_model_name)
     best_eval_loss = torch.load(save_path)['eval_loss'] if os.path.exists(save_path) and epoch > 1 else float('inf')
+    
+    if task == 'segmentation':
+        for image, target in tqdm(train_loader):
+            image, target = image.to(device), target.to(device)
+            optimizer.zero_grad()
+            output = model(image)
+            loss = loss_fn(output, target)
+            loss.backward()
+            optimizer.step()
+            total_loss += loss.item() * image.size(0)
+            total_train_samples += image.size(0)
 
-    for image, target in tqdm(train_loader):
-        image, target = image.to(device), target.to(device)
-        optimizer.zero_grad()
-        output = model(image)
-        loss = loss_fn(output, target)
-        loss.backward()
-        optimizer.step()
-        total_loss += loss.item() * image.size(0)
-        total_train_samples += image.size(0)
+    elif task == 'classification':
+        for image, labels in train_loader:
+            image, labels = image.to(device), labels.to(device)
+            optimizer.zero_grad()
+            outputs, reconstructions = model(image)
+            loss = loss_fn(outputs, labels)
+            loss += 0.5 * torch.mean((reconstructions - image)**2)  # Reconstruction loss
+            loss.backward()
+            optimizer.step()
+            total_loss += loss.item() * image.size(0)
+            total_train_samples += image.size(0)
 
     average_train_loss = total_loss / total_train_samples
 
@@ -69,7 +82,8 @@ def train(model, train_loader, val_loader, optimizer, loss_fn, device, epoch, sa
 
 
 def main(arguments):
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    # device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    device = torch.device('cuda' if torch.cuda.is_available() else 'mps')
 
     json_opts = json_to_py_obj(arguments.config)
     train_opts = json_opts.training
@@ -119,7 +133,7 @@ def main(arguments):
     val_loss_list = []
 
     for epoch in range(1, train_opts.epochs + 1):
-        train_loss, val_loss = train(model, train_loader, val_loader, optimizer, loss_fn, device, epoch, model_opts.save_model_name)
+        train_loss, val_loss = train(model, train_loader, val_loader, train_opts.task, optimizer, loss_fn, device, epoch, model_opts.save_model_name)
         train_loss_list.append(train_loss)
         val_loss_list.append(val_loss)
         print(f"Epoch: {epoch}; train loss: {train_loss:.4f}; validation loss: {val_loss:.4f}")
