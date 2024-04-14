@@ -22,7 +22,7 @@
     "in_channels": 3,
     "is_batchnorm": true,
     "save_model_name": "Attention_unet_best_segmentation.pth",
-    "pretrained_model": "vanilla_unet_best_classification.pth",
+    "pretrained_model": "vanilla_unet_best_classification.pth"
   },
   "transform": {
     "img_shape": [224, 224],
