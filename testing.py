@@ -18,24 +18,23 @@ def calculate_iou(pred_mask, true_mask, threshold=0.5):
     iou = (intersection + 1e-6) / (union + 1e-6)
     return iou.item()
 
-def calculate_f1_score(pred_mask, true_mask, threshold=0.5):
-    # Binary prediction mask and real mask
+def calculate_evaluation_metrics(pred_mask, true_mask, threshold=0.5):
     pred_mask = (pred_mask > threshold).float()
     true_mask = (true_mask > threshold).float()
 
-    # calculate True Positives, False Positives, and False Negatives
-    TP = torch.sum(pred_mask * true_mask).item()  # prediction was positive, and the reality was positive
-    FP = torch.sum(pred_mask * (1 - true_mask)).item()  # prediction was positive, but the actual result was negative
-    FN = torch.sum((1 - pred_mask) * true_mask).item()  # The prediction was negative, but the reality was positive
+    TP = torch.sum(pred_mask * true_mask).item()
+    TN = torch.sum((1 - pred_mask) * (1 - true_mask)).item()
+    FP = torch.sum(pred_mask * (1 - true_mask)).item()
+    FN = torch.sum((1 - pred_mask) * true_mask).item()
 
-    # calculate precision and recall
-    precision = TP / (TP + FP) if (TP + FP) > 0 else 0
-    recall = TP / (TP + FN) if (TP + FN) > 0 else 0
+    precision = TP / (TP + FP) if TP + FP > 0 else 0
+    recall = TP / (TP + FN) if TP + FN > 0 else 0  # also known as sensitivity
+    specificity = TN / (TN + FP) if TN + FP > 0 else 0
 
-    # calculate F1
-    f1_score = 2 * precision * recall / (precision + recall) if (precision + recall) > 0 else 0
+    # F1 Score
+    f1_score = 2 * (precision * recall) / (precision + recall) if precision + recall > 0 else 0
 
-    return f1_score
+    return precision, recall, f1_score, specificity
 
 
 def visualize_images(image, mask, prediction, visualized_count, save_model_name, save_dir='saved_models'):
@@ -102,6 +101,9 @@ def main(config_file):
     # Variables for IoU and F1 score calculations
     iou_scores = []
     f1_scores = []
+    precision_scores = []
+    recall_scores = []
+    specificity_scores = []
     visualized_count = 0
 
     # Evaluate the model
@@ -111,13 +113,16 @@ def main(config_file):
             masks = masks.to(device)
             predictions = torch.sigmoid(model(images))
 
-            # Calculate IoU and F1 for each image in the batch
             for j, (img, msk, pred) in enumerate(zip(images, masks, predictions)):
                 iou = calculate_iou(pred, msk)
-                f1 = calculate_f1_score(pred, msk)
+                precision, recall, f1, specificity = calculate_evaluation_metrics(pred, msk)
+                
                 iou_scores.append(iou)
+                precision_scores.append(precision)
+                recall_scores.append(recall)
                 f1_scores.append(f1)
-
+                specificity_scores.append(specificity)
+            
                 # Visualize and save the first few images, masks, and predictions
                 if visualized_count < 3:  # Change this as needed
                     visualize_images(img, msk, pred, visualized_count, config.model.save_model_name, save_dir='saved_models')
@@ -130,10 +135,19 @@ def main(config_file):
 
 
     # Calculate and print average IoU, F1 score
+    average_precision = sum(precision_scores) / len(precision_scores)
+    average_recall = sum(recall_scores) / len(recall_scores)
+    average_specificity = sum(specificity_scores) / len(specificity_scores)
+    average_f1 = sum(f1_scores) / len(f1_scores)
     average_iou = sum(iou_scores) / len(iou_scores)
     average_f1 = sum(f1_scores) / len(f1_scores)
+
     print(f"Average IoU for the test set: {average_iou:.4f}")
     print(f"Average F1 Score for the test set: {average_f1:.4f}")
+    print(f"Average Precision: {average_precision:.4f}")
+    print(f"Average Recall/Sensitivity: {average_recall:.4f}")
+    print(f"Average Specificity: {average_specificity:.4f}")
+    # print(f"Average F1 Score: {average_f1:.4f}")
 
 if __name__ == '__main__':
     import argparse
