@@ -1,0 +1,32 @@
+{
+  "training": {
+    "task": "segmentation",
+    "transfer_learning": true,
+    "epochs": 20,
+    "lr_policy": "step",
+    "lr_decay_iters": 250,
+    "preloadData": true
+  },
+  "data": {
+    "root_dir": "datasets/segmentation",
+    "with_notumour": true,
+    "train_batch_size": 24,
+    "test_batch_size": 24,
+    "seed": 42
+  },
+  "model": {
+    "model_name": "VanillaUnet",
+    "n_classes": 4,
+    "feature_scale": 4,
+    "is_deconv": true,
+    "in_channels": 3,
+    "is_batchnorm": true,
+    "save_model_name": "vanilla_unet_best_segmentation_with_transLearn_cls.pth",
+    "pretrained_model": "vanilla_unet_best_classification.pth"
+  },
+  "transform": {
+    "img_shape": [224, 224],
+    "mean": [0.485, 0.456, 0.406],
+    "std": [0.229, 0.224, 0.225]
+  }
+}
