@@ -114,7 +114,7 @@ class LinearAttention(nn.Module):
         self.to_qkv = nn.Conv2d(dim, hidden_dim * 3, 1, bias=False)
         self.to_out = nn.Sequential(
             nn.Conv2d(hidden_dim, dim, 1),
-            nn.LayerNorm(dim)
+            nn.InstanceNorm2d(dim)
         )
 
     def forward(self, x):
@@ -233,10 +233,13 @@ class MultiheadAttentionUnet(nn.Module):
 
         h = []
 
-        for blocks in self.downs:
-            for block in blocks:
-                x = block(x)
+        for block1, block2, attn, downsample in self.downs:
+            x = block1(x)
             h.append(x)
+            x = block2(x)
+            h.append(x)
+            x = attn(x)
+            x = downsample(x)
 
         if self.mode == 'classification':
             pooled = self.global_pool(x)
@@ -247,11 +250,14 @@ class MultiheadAttentionUnet(nn.Module):
             x = self.mid_attn(x)
             x = self.mid_block2(x)
 
-            for blocks in self.ups:
-                for block in blocks:
-                    if isinstance(block, Upsample):
-                        x = torch.cat([x, h.pop()], dim=1)
-                    x = block(x)
+            for block1, block2, attn, upsample in self.ups:
+                x = torch.cat([x, h.pop()], dim=1)
+                x = block1(x)
+                x = torch.cat([x, h.pop()], dim=1)
+                x = block2(x)
+                x = attn(x)
+                x = upsample(x)
+
             x = torch.cat((x, r), dim=1)
 
             x = self.final_res_block(x)
@@ -264,11 +270,14 @@ class MultiheadAttentionUnet(nn.Module):
             x = self.mid_attn(x)
             x = self.mid_block2(x)
 
-            for blocks in self.ups:
-                for block in blocks:
-                    if isinstance(block, Upsample):
-                        x = torch.cat([x, h.pop()], dim=1)
-                    x = block(x)
+            for block1, block2, attn, upsample in self.ups:
+                x = torch.cat([x, h.pop()], dim=1)
+                x = block1(x)
+                x = torch.cat([x, h.pop()], dim=1)
+                x = block2(x)
+                x = attn(x)
+                x = upsample(x)
+
             x = torch.cat((x, r), dim=1)
 
             x = self.final_res_block(x)
