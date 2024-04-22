@@ -7,12 +7,12 @@ from models.network_helper import init_weights
 
 class unet_2D(nn.Module):
 
-    def __init__(self, feature_scale=4, n_classes=4, is_deconv=True, in_channels=3, attention_dsample=None,
-                 is_batchnorm=True, mode='segmentation'):
+    def __init__(self, feature_scale=4, n_classes=4, in_channels=3,
+                 mode='segmentation', model_kwargs=None):
         super(unet_2D, self).__init__()
-        self.is_deconv = is_deconv
+        self.is_deconv = model_kwargs.is_deconv
         self.in_channels = in_channels
-        self.is_batchnorm = is_batchnorm
+        self.is_batchnorm = model_kwargs.is_batchnorm
         self.feature_scale = feature_scale
         self.mode = mode
 
@@ -49,7 +49,7 @@ class unet_2D(nn.Module):
 
         # final conv (without any concat)
         self.final = nn.Conv2d(filters[0], self.in_channels, 1)
-        self.segmentation = nn.Conv2d(self.in_channels, 1,1)
+        self.segmentation = nn.Conv2d(self.in_channels, 1, 1)
 
         # initialise weights
         for m in self.modules():
@@ -77,13 +77,14 @@ class unet_2D(nn.Module):
             pooled = self.global_pool(center)
             pooled = torch.flatten(pooled, 1)
             classification_output = self.classifier(pooled)
+
             up4 = self.up_concat4(conv4, center)
             up3 = self.up_concat3(conv3, up4)
             up2 = self.up_concat2(conv2, up3)
             up1 = self.up_concat1(conv1, up2)
-            final = self.final(up1)
+            reconstruct = self.final(up1)
 
-            return classification_output, final
+            return classification_output, reconstruct
 
         elif self.mode == 'segmentation':
             up4 = self.up_concat4(conv4, center)
@@ -92,9 +93,7 @@ class unet_2D(nn.Module):
             up1 = self.up_concat1(conv1, up2)
 
             final = self.final(up1)
-            # print(final.shape)
             final = self.segmentation(final)
-            # print(final.shape)
 
             return final
 

@@ -7,12 +7,12 @@ from .network_helper import init_weights
 
 class unet_CT_single_att(nn.Module):
 
-    def __init__(self, feature_scale=4, n_classes=4, is_deconv=True, in_channels=3,
-                 attention_dsample=(2,2), is_batchnorm=True, mode='segmentation'):
+    def __init__(self, feature_scale=4, n_classes=4, in_channels=3,
+                 attention_dsample=(2,2), mode='segmentation', model_kwargs=None):
         super(unet_CT_single_att, self).__init__()
-        self.is_deconv = is_deconv
+        self.is_deconv = model_kwargs.is_deconv
         self.in_channels = in_channels
-        self.is_batchnorm = is_batchnorm
+        self.is_batchnorm = model_kwargs.is_batchnorm
         self.feature_scale = feature_scale
         self.mode = mode
 
@@ -48,10 +48,10 @@ class unet_CT_single_att(nn.Module):
                                                    sub_sample_factor=attention_dsample)
 
         # upsampling
-        self.up_concat4 = UnetUp_Concat(filters[4], filters[3], is_batchnorm)
-        self.up_concat3 = UnetUp_Concat(filters[3], filters[2], is_batchnorm)
-        self.up_concat2 = UnetUp_Concat(filters[2], filters[1], is_batchnorm)
-        self.up_concat1 = UnetUp_Concat(filters[1], filters[0], is_batchnorm)
+        self.up_concat4 = UnetUp_Concat(filters[4], filters[3], self.is_batchnorm)
+        self.up_concat3 = UnetUp_Concat(filters[3], filters[2], self.is_batchnorm)
+        self.up_concat2 = UnetUp_Concat(filters[2], filters[1], self.is_batchnorm)
+        self.up_concat1 = UnetUp_Concat(filters[1], filters[0], self.is_batchnorm)
 
         # deep supervision
         # self.dsv4 = UnetDsv3(in_size=filters[3], out_size=n_classes, scale_factor=8)
@@ -63,7 +63,7 @@ class unet_CT_single_att(nn.Module):
 
         # final conv (without any concat)
         self.final = nn.Conv2d(filters[0], self.in_channels, 1)
-        self.segmentation = nn.Conv2d(self.in_channels, 1,1)
+        self.segmentation = nn.Conv2d(self.in_channels, 1, 1)
 
         # initialise weights
         for m in self.modules():

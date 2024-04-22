@@ -91,6 +91,7 @@ def validate(model, dataloader, loss_fn, device, task):
     else:
         return average_val_loss
 
+
 def train(model, train_loader, val_loader, task, optimizer, loss_fn, device, epoch, save_model_name):
     total_loss = 0
     total_train_samples = 0
@@ -164,8 +165,8 @@ def main(arguments):
         val_loader = DataLoader(val_dataset, batch_size=data_opts.test_batch_size, shuffle=False)
 
         myModel = get_model(model_opts.model_name)
-        model = myModel(model_opts.feature_scale, model_opts.n_classes, model_opts.is_deconv, model_opts.in_channels,
-                        is_batchnorm=model_opts.is_batchnorm, mode=train_opts.task).to(device)
+        model = myModel(model_opts.feature_scale, model_opts.n_classes, model_opts.in_channels,
+                        mode=train_opts.task, model_kwargs=model_opts).to(device)
 
         loss_fn = torch.nn.CrossEntropyLoss()
         optimizer = optim.Adam(model.parameters(), lr=1e-4)
@@ -177,8 +178,8 @@ def main(arguments):
         val_loader = DataLoader(val_dataset, batch_size=data_opts.test_batch_size, shuffle=False)
 
         myModel = get_model(model_opts.model_name)
-        model = myModel(model_opts.feature_scale, model_opts.n_classes, model_opts.is_deconv, model_opts.in_channels,
-                        is_batchnorm=model_opts.is_batchnorm, mode=train_opts.task).to(device)
+        model = myModel(model_opts.feature_scale, model_opts.n_classes, model_opts.in_channels,
+                        mode=train_opts.task, model_kwargs=model_opts).to(device)
 
         if train_opts.transfer_learning:
             print("applying transfer learning")

@@ -4,6 +4,7 @@ import collections
 import json
 from models.AttentionUnet import unet_CT_single_att
 from models.VanillaUnet import unet_2D
+from models.MultiheadAttentionUnet import MultiheadAttentionUnet
 
 
 
@@ -17,5 +18,6 @@ def get_model(name):
 
     return {
         'AttentionUnet': unet_CT_single_att,
-        'VanillaUnet': unet_2D
+        'VanillaUnet': unet_2D,
+        'MultiheadAttentionUnet': MultiheadAttentionUnet
     }[name]

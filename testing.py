@@ -7,6 +7,7 @@ from models import *
 import matplotlib.pyplot as plt
 import os
 
+
 # Function to calculate Intersection over Union (IoU)
 def calculate_iou(pred_mask, true_mask, threshold=0.5):
     pred_mask = (pred_mask > threshold).float()
@@ -17,6 +18,7 @@ def calculate_iou(pred_mask, true_mask, threshold=0.5):
 
     iou = (intersection + 1e-6) / (union + 1e-6)
     return iou.item()
+
 
 def calculate_evaluation_metrics(pred_mask, true_mask, threshold=0.5):
     pred_mask = (pred_mask > threshold).float()
@@ -75,9 +77,6 @@ def visualize_images(image, mask, prediction, visualized_count, save_model_name,
     print(f"Saved visualization to {filename}")
 
 
-
-
-
 def main(config_file):
     # Load configuration
     config = json_to_py_obj(config_file)
@@ -90,7 +89,8 @@ def main(config_file):
 
     # Load the model
     model_opts = config.model
-    model = get_model(model_opts.model_name)(model_opts.feature_scale, model_opts.n_classes, model_opts.is_deconv, model_opts.in_channels, is_batchnorm=model_opts.is_batchnorm, mode=config.training.task).to(device)
+    model = get_model(model_opts.model_name)(model_opts.feature_scale, model_opts.n_classes, model_opts.in_channels,
+                                             mode=config.training.task, model_kwargs=model_opts).to(device)
     model_path = os.path.join('saved_models', model_opts.save_model_name)
 
     # Adjust the map_location based on the availability of CUDA
@@ -132,8 +132,6 @@ def main(config_file):
                 if visualized_count >= 3:
                     break
 
-
-
     # Calculate and print average IoU, F1 score
     average_precision = sum(precision_scores) / len(precision_scores)
     average_recall = sum(recall_scores) / len(recall_scores)
@@ -148,6 +146,7 @@ def main(config_file):
     print(f"Average Recall/Sensitivity: {average_recall:.4f}")
     print(f"Average Specificity: {average_specificity:.4f}")
     # print(f"Average F1 Score: {average_f1:.4f}")
+
 
 if __name__ == '__main__':
     import argparse

@@ -2,27 +2,26 @@
   "training": {
     "task": "segmentation",
     "transfer_learning": false,
-    "epochs": 28,
+    "epochs": 2,
     "lr_policy": "step",
     "lr_decay_iters": 250,
     "preloadData": true
   },
   "data": {
     "root_dir": "datasets/segmentation",
-    "with_notumour": false,
+    "with_notumour": true,
     "train_batch_size": 24,
     "test_batch_size": 24,
     "seed": 42
   },
   "model": {
-    "model_name": "VanillaUnet",
+    "model_name": "MultiheadAttentionUnet",
     "n_classes": 4,
-    "feature_scale": 4,
-    "is_deconv": true,
+    "feature_scale": 16,
     "in_channels": 3,
-    "is_batchnorm": true,
-    "save_model_name": "vanilla_unet_best_segmentation_wthout_notum.pth",
-    "pretrained_model": "vanilla_unet_best_classification.pth"
+    "resnet_block_groups": 8,
+    "save_model_name": "Multihead_attention_unet_best_segmentation.pth",
+    "pretrained_model": "Multihead_attention_unet_best_classification.pth"
   },
   "transform": {
     "img_shape": [224, 224],
