@@ -2,7 +2,7 @@
   "training": {
     "task": "segmentation",
     "transfer_learning": false,
-    "epochs": 2,
+    "epochs": 20,
     "lr_policy": "step",
     "lr_decay_iters": 250,
     "preloadData": true
@@ -10,8 +10,8 @@
   "data": {
     "root_dir": "datasets/segmentation",
     "with_notumour": true,
-    "train_batch_size": 24,
-    "test_batch_size": 24,
+    "train_batch_size": 12,
+    "test_batch_size": 12,
     "seed": 42
   },
   "model": {
