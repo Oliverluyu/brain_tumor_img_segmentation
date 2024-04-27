@@ -209,7 +209,14 @@ def main(arguments):
 
                 model.load_state_dict(new_state_dict, strict=False)
                 print("Loaded pretrained weights for specified layers.")
-            
+                
+                # If freezing is enabled, freeze the specified layers
+                if train_opts.freeze:
+                    # Freeze layers specified in the config file's transfer_layers
+                    for name, parameter in model.named_parameters():
+                        if any(name.startswith(layer) for layer in transfer_layers):
+                            parameter.requires_grad = False
+                    print(f"Frozen layers: {transfer_layers}")
             
             
             except Exception as error:
