@@ -5,7 +5,8 @@
     "epochs": 20,
     "lr_policy": "step",
     "lr_decay_iters": 250,
-    "preloadData": true
+    "preloadData": true,
+    "freeze": true
   },
   "data": {
     "root_dir": "datasets/segmentation",

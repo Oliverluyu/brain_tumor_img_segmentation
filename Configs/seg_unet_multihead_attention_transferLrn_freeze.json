@@ -2,10 +2,11 @@
   "training": {
     "task": "segmentation",
     "transfer_learning": true,
-    "epochs": 20,
+    "epochs": 5,
     "lr_policy": "step",
     "lr_decay_iters": 250,
-    "preloadData": true
+    "preloadData": true,
+    "freeze": true
   },
   "data": {
     "root_dir": "datasets/segmentation",
