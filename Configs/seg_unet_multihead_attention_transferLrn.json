@@ -22,7 +22,7 @@
     "resnet_block_groups": 8,
     "save_model_name": "Multihead_attention_unet_best_segmentation_transferlrn.pth",
     "pretrained_model": "multihead_unet_best_classification.pth",
-    "transfer_layers": ["conv1", "conv2", "conv3", "conv4", "center"]
+    "transfer_layers": ["init_conv", "downs"]
   },
   "transform": {
     "img_shape": [224, 224],
