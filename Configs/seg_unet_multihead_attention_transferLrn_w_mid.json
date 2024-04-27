@@ -2,7 +2,7 @@
   "training": {
     "task": "segmentation",
     "transfer_learning": true,
-    "epochs": 5,
+    "epochs": 20,
     "lr_policy": "step",
     "lr_decay_iters": 250,
     "preloadData": true,
@@ -21,7 +21,7 @@
     "feature_scale": 16,
     "in_channels": 3,
     "resnet_block_groups": 8,
-    "save_model_name": "Multihead_attention_unet_best_segmentation_transferlrn.pth",
+    "save_model_name": "Multihead_attention_unet_best_segmentation_transferlrn_w_mid.pth",
     "pretrained_model": "multihead_unet_best_classification.pth",
     "transfer_layers": ["init_conv", "downs"]
   },
