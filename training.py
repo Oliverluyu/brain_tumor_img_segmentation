@@ -56,15 +56,23 @@ def apply_transfer_learning(model, config):
         except Exception as error:
             print('Caught this error when initializing pretrained model: ' + repr(error))
 
-def schedule_unfreezing(transfer_layers, epoch, unfreeze_rate):
-    # Determines which layers to unfreeze based on the current epoch and the unfreeze rate
-    num_layers_to_unfreeze = min(len(transfer_layers), max(0, epoch // unfreeze_rate))
-    layers_to_unfreeze = transfer_layers[-num_layers_to_unfreeze:]  # Unfreeze from the last to the first
+def schedule_unfreezing(epoch, epochs, transfer_layers):
+    # Calculate the number of epochs to wait before unfreezing each layer
+    epochs_per_layer = epochs // len(transfer_layers)
+    # Calculate which layer should be unfrozen based on the current epoch
+    layer_idx = (epoch - 1) // epochs_per_layer
+    # In case we have more epochs than layers, ensure we don't go out of index
+    layer_idx = min(layer_idx, len(transfer_layers) - 1)
+    # Reverse the transfer_layers list so we unfreeze from the top layers first
+    layers_to_unfreeze = transfer_layers[:layer_idx + 1][::-1]
     return layers_to_unfreeze
 
 def unfreeze_model_layers(model, layers_to_unfreeze):
+    # First, we freeze all layers
     for name, parameter in model.named_parameters():
-        # Unfreeze the layers that are in the layers_to_unfreeze list
+        parameter.requires_grad = False
+    # Then we unfreeze the specified layers
+    for name, parameter in model.named_parameters():
         if any(layer in name for layer in layers_to_unfreeze):
             parameter.requires_grad = True
 
@@ -249,10 +257,11 @@ def main(arguments):
 
     for epoch in range(1, train_opts.epochs + 1):
 
-        if train_opts.gradually_unfreeze and epoch > 1:  # No unfreezing in the first epoch
-            layers_to_unfreeze = schedule_unfreezing(model_opts.transfer_layers, epoch, unfreeze_rate)
-            unfreeze_model_layers(model, layers_to_unfreeze)
-            if layers_to_unfreeze:
+        if train_opts.transfer_learning and train_opts.freeze:
+            # Calculate which layers to unfreeze based on the current epoch
+            if train_opts.gradually_unfreeze:
+                layers_to_unfreeze = schedule_unfreezing(epoch, train_opts.epochs, model_opts.transfer_layers)
+                unfreeze_model_layers(model, layers_to_unfreeze)
                 print(f"Epoch {epoch}: Unfreezing layers {layers_to_unfreeze}")
 
         train_loss, val_loss = train(model, train_loader, val_loader, train_opts.task, optimizer, loss_fn, device, epoch, model_opts.save_model_name)
