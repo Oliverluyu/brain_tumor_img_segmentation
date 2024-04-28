@@ -220,6 +220,7 @@ def main(arguments):
                 pretrained_model_state = pretrained_dict['model_state_dict']
                 new_state_dict = model.state_dict()  
                 transfer_layers = model_opts.transfer_layers
+                frozen_layers = model_opts.frozen_layers
                 # print (f" printing :{pretrained_dict.items()}")
 
                 for key, value in pretrained_model_state.items():
@@ -234,11 +235,11 @@ def main(arguments):
                 
                 # If freezing is enabled, freeze the specified layers
                 if train_opts.freeze:
-                    # Freeze layers specified in the config file's transfer_layers
+                    # Freeze layers specified in the config file's frozen_layers
                     for name, parameter in model.named_parameters():
-                        if any(name.startswith(layer) for layer in transfer_layers):
+                        if any(name.startswith(layer) for layer in frozen_layers):
                             parameter.requires_grad = False
-                    print(f"Frozen layers: {transfer_layers}")
+                    print(f"Frozen layers: {frozen_layers}")
             
             
             except Exception as error:
@@ -246,9 +247,6 @@ def main(arguments):
 
             # # freeze the encoder part of the pretrained classification model
             # model.freeze_encoder()
-
-        # Setup for gradual unfreezing
-        unfreeze_rate = train_opts.epochs // len(model_opts.transfer_layers)  # Define how often to unfreeze layers
 
         loss_fn = torch.nn.BCEWithLogitsLoss()  # Can change Loss Function accordingly for segmentation task!!
         # initialize optimizer excluding frozen parameters
@@ -260,16 +258,20 @@ def main(arguments):
 
     for epoch in range(1, train_opts.epochs + 1):
 
-        if train_opts.transfer_learning and train_opts.freeze:
-            # Calculate which layers to unfreeze based on the current epoch
-            if train_opts.gradually_unfreeze:
-                layers_to_unfreeze = schedule_unfreezing(epoch, model_opts.transfer_layers)
-                unfreeze_model_layers(model, layers_to_unfreeze)
-                print(f"Epoch {epoch}: Unfreezing layers {layers_to_unfreeze}")
+        if train_opts.transfer_learning and train_opts.freeze and train_opts.gradually_unfreeze:
+            layers_to_unfreeze = schedule_unfreezing(epoch, model_opts.frozen_layers)
+            unfreeze_model_layers(model, layers_to_unfreeze)
+            print(f"Epoch {epoch}: Unfreezing layers {layers_to_unfreeze}")
 
-                # # Reinitialize the optimizer with the unfrozen parameters
-                # optimizer = optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=1e-4)
-                # print("Optimizer reinitialized with newly unfrozen parameters.")
+            # Check if there are any trainable parameters before reinitializing the optimizer
+            trainable_params = [p for p in model.parameters() if p.requires_grad]
+            if trainable_params:
+                optimizer = optim.Adam(trainable_params, lr=1e-4)
+                print("Optimizer reinitialized with newly unfrozen parameters.")
+            else:
+                print("No layers to unfreeze, optimizer not reinitialized.")
+
+
 
 
         train_loss, val_loss = train(model, train_loader, val_loader, train_opts.task, optimizer, loss_fn, device, epoch, model_opts.save_model_name)

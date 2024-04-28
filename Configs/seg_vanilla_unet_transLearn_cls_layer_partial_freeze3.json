@@ -25,7 +25,8 @@
     "is_batchnorm": true,
     "save_model_name": "vanilla_unet_best_segmentation_with_transLearn_partial_freeze3.pth",
     "pretrained_model": "vanilla_unet_best_classification.pth",
-    "transfer_layers": ["conv1", "conv2", "conv3"]
+    "transfer_layers": ["conv1", "conv2", "conv3", "conv4", "center"],
+    "frozen_layers": ["conv1", "conv2", "conv3"]
   },
   "transform": {
     "img_shape": [224, 224],
