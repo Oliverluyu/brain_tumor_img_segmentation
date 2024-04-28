@@ -56,6 +56,17 @@ def apply_transfer_learning(model, config):
         except Exception as error:
             print('Caught this error when initializing pretrained model: ' + repr(error))
 
+def schedule_unfreezing(transfer_layers, epoch, unfreeze_rate):
+    # Determines which layers to unfreeze based on the current epoch and the unfreeze rate
+    num_layers_to_unfreeze = min(len(transfer_layers), max(0, epoch // unfreeze_rate))
+    layers_to_unfreeze = transfer_layers[-num_layers_to_unfreeze:]  # Unfreeze from the last to the first
+    return layers_to_unfreeze
+
+def unfreeze_model_layers(model, layers_to_unfreeze):
+    for name, parameter in model.named_parameters():
+        # Unfreeze the layers that are in the layers_to_unfreeze list
+        if any(layer in name for layer in layers_to_unfreeze):
+            parameter.requires_grad = True
 
 def validate(model, dataloader, loss_fn, device, task):
     model.eval()
@@ -225,6 +236,9 @@ def main(arguments):
             # # freeze the encoder part of the pretrained classification model
             # model.freeze_encoder()
 
+        # Setup for gradual unfreezing
+        unfreeze_rate = train_opts.epochs // len(model_opts.transfer_layers)  # Define how often to unfreeze layers
+
         loss_fn = torch.nn.BCEWithLogitsLoss()  # Can change Loss Function accordingly for segmentation task!!
         # initialize optimizer excluding frozen parameters
         optimizer = optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=1e-4)
@@ -234,6 +248,13 @@ def main(arguments):
     val_accuracy_list = []  # Initialize list to store validation accuracies
 
     for epoch in range(1, train_opts.epochs + 1):
+
+        if train_opts.gradually_unfreeze and epoch > 1:  # No unfreezing in the first epoch
+            layers_to_unfreeze = schedule_unfreezing(model_opts.transfer_layers, epoch, unfreeze_rate)
+            unfreeze_model_layers(model, layers_to_unfreeze)
+            if layers_to_unfreeze:
+                print(f"Epoch {epoch}: Unfreezing layers {layers_to_unfreeze}")
+
         train_loss, val_loss = train(model, train_loader, val_loader, train_opts.task, optimizer, loss_fn, device, epoch, model_opts.save_model_name)
         train_loss_list.append(train_loss)
         val_loss_list.append(val_loss)
