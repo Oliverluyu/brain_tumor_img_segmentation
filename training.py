@@ -69,9 +69,6 @@ def schedule_unfreezing(epoch, transfer_layers):
 
 
 def unfreeze_model_layers(model, layers_to_unfreeze):
-    # Initially, freeze all layers
-    for name, parameter in model.named_parameters():
-        parameter.requires_grad = False
     # Unfreeze the specified layers
     for name, parameter in model.named_parameters():
         if any(name.startswith(layer) for layer in layers_to_unfreeze):
@@ -264,12 +261,12 @@ def main(arguments):
             print(f"Epoch {epoch}: Unfreezing layers {layers_to_unfreeze}")
 
             # Check if there are any trainable parameters before reinitializing the optimizer
-            trainable_params = [p for p in model.parameters() if p.requires_grad]
-            if trainable_params:
-                optimizer = optim.Adam(trainable_params, lr=1e-4)
-                print("Optimizer reinitialized with newly unfrozen parameters.")
-            else:
-                print("No layers to unfreeze, optimizer not reinitialized.")
+            # trainable_params = [p for p in model.parameters() if p.requires_grad]
+            # if trainable_params:
+            #     optimizer = optim.Adam(trainable_params, lr=1e-4)
+            #     print("Optimizer reinitialized with newly unfrozen parameters.")
+            # else:
+            #     print("No layers to unfreeze, optimizer not reinitialized.")
 
 
 
