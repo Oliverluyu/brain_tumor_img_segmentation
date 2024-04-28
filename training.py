@@ -56,9 +56,13 @@ def apply_transfer_learning(model, config):
         except Exception as error:
             print('Caught this error when initializing pretrained model: ' + repr(error))
 
+
 def schedule_unfreezing(epoch, transfer_layers):
+    # Start unfreezing only from the second epoch
+    if epoch < 2:
+        return []  # No layers to unfreeze during the first epoch
     # Ensure not to exceed the number of layers in transfer_layers
-    num_layers_to_unfreeze = min(epoch, len(transfer_layers))
+    num_layers_to_unfreeze = min(epoch - 1, len(transfer_layers))  # Adjust to start unfreezing from second epoch
     # Select the last `num_layers_to_unfreeze` layers from the list to unfreeze
     layers_to_unfreeze = transfer_layers[-num_layers_to_unfreeze:]
     return layers_to_unfreeze
@@ -263,9 +267,9 @@ def main(arguments):
                 unfreeze_model_layers(model, layers_to_unfreeze)
                 print(f"Epoch {epoch}: Unfreezing layers {layers_to_unfreeze}")
 
-                # Reinitialize the optimizer with the unfrozen parameters
-                optimizer = optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=1e-4)
-                print("Optimizer reinitialized with newly unfrozen parameters.")
+                # # Reinitialize the optimizer with the unfrozen parameters
+                # optimizer = optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=1e-4)
+                # print("Optimizer reinitialized with newly unfrozen parameters.")
 
 
         train_loss, val_loss = train(model, train_loader, val_loader, train_opts.task, optimizer, loss_fn, device, epoch, model_opts.save_model_name)
