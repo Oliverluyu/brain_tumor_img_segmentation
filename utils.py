@@ -5,7 +5,7 @@ import json
 from models.AttentionUnet import unet_CT_single_att
 from models.VanillaUnet import unet_2D
 from models.MultiheadAttentionUnet import MultiheadAttentionUnet
-
+from models.ProposedUnet import ProposedAttentionUnet
 
 
 def json_to_py_obj(filename):
@@ -17,6 +17,7 @@ def json_to_py_obj(filename):
 def get_model(name):
 
     return {
+        'ProposedUnet': ProposedAttentionUnet,
         'AttentionUnet': unet_CT_single_att,
         'VanillaUnet': unet_2D,
         'MultiheadAttentionUnet': MultiheadAttentionUnet

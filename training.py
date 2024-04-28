@@ -11,7 +11,6 @@ import datetime
 import os
 
 
-
 # def train_val_loss_plot(train_loss_values, val_loss_values, val_accuracy_values):
 #     epochs = range(1, len(train_loss_values) + 1)
     
@@ -169,7 +168,6 @@ def train(model, train_loader, val_loader, task, optimizer, loss_fn, device, epo
     return average_train_loss, average_val_loss
 
 
-
 def main(arguments):
     device = torch.device('cuda' if torch.cuda.is_available() else 'cuda')
 
@@ -270,8 +268,6 @@ def main(arguments):
                 print("Optimizer reinitialized with newly unfrozen parameters.")
             else:
                 print("No layers to unfreeze, optimizer not reinitialized.")
-
-
 
 
         train_loss, val_loss = train(model, train_loader, val_loader, train_opts.task, optimizer, loss_fn, device, epoch, model_opts.save_model_name)
