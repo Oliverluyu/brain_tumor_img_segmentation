@@ -1,13 +1,13 @@
 {
   "training": {
     "task": "classification",
-    "epochs": 3,
+    "epochs": 8,
     "lr_policy": "step",
     "lr_decay_iters": 250,
     "preloadData": true
   },
   "data": {
-    "root_dir": "datasets/segmentation",
+    "root_dir": "datasets/classification",
     "with_notumour": true,
     "train_batch_size": 12,
     "test_batch_size": 12,
@@ -21,7 +21,7 @@
     "in_channels": 3,
     "resnet_block_groups": 8,
     "is_batchnorm": true,
-    "save_model_name": "multihead_unet_best_classification.pth"
+    "save_model_name": "Multihead_attention_unet_best_classification.pth"
   },
   "transform": {
     "img_shape": [224, 224],

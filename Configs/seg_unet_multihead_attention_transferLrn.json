@@ -5,7 +5,9 @@
     "epochs": 20,
     "lr_policy": "step",
     "lr_decay_iters": 250,
-    "preloadData": true
+    "preloadData": true,
+    "freeze": true,
+    "gradually_unfreeze": false
   },
   "data": {
     "root_dir": "datasets/segmentation",
@@ -21,8 +23,9 @@
     "in_channels": 3,
     "resnet_block_groups": 8,
     "save_model_name": "Multihead_attention_unet_best_segmentation_transferlrn.pth",
-    "pretrained_model": "multihead_unet_best_classification.pth",
-    "transfer_layers": ["init_conv", "downs"]
+    "pretrained_model": "Multihead_attention_unet_best_classification.pth",
+    "transfer_layers": ["init_conv", "downs"],
+    "frozen_layers": ["init_conv", "downs.0", "downs.1"]
   },
   "transform": {
     "img_shape": [224, 224],
