@@ -1,10 +1,13 @@
 {
   "training": {
     "task": "classification",
-    "epochs": 10,
+    "transfer_learning": false,
+    "epochs": 5,
     "lr_policy": "step",
     "lr_decay_iters": 250,
-    "preloadData": true
+    "preloadData": true,
+    "freeze": false,
+    "gradually_unfreeze": false
   },
   "data": {
     "root_dir": "datasets/classification",
