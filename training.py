@@ -155,7 +155,7 @@ def train(model, train_loader, val_loader, task, optimizer, loss_fn, device, epo
             total_train_samples += image.size(0)
 
     elif task == 'classification':
-        for image, labels in train_loader:
+        for image, labels in tqdm(train_loader):
             image, labels = image.to(device), labels.to(device)
             optimizer.zero_grad()
             outputs, reconstructions = model(image)
@@ -261,7 +261,6 @@ def main(arguments):
                             parameter.requires_grad = False
                     print(f"Frozen layers: {frozen_layers}")
 
-
             except Exception as error:
                 print('Caught this error when initialized pretrained model: ' + repr(error))
 
@@ -281,7 +280,7 @@ def main(arguments):
 
     for epoch in range(1, train_opts.epochs + 1):
 
-        if train_opts.transfer_learning and train_opts.freeze and train_opts.gradually_unfreeze:
+        if train_opts.task == 'segmentation' and train_opts.transfer_learning and train_opts.freeze and train_opts.gradually_unfreeze:
             layers_to_unfreeze = schedule_unfreezing(epoch, model_opts.frozen_layers)
             unfreeze_model_layers(model, layers_to_unfreeze)
             print(f"Epoch {epoch}: Unfreezing layers {layers_to_unfreeze}")
