@@ -238,11 +238,11 @@ class ProposedAttentionUnet(nn.Module):
 
         # mid blocks
         mid_dim = dims[-1]
-        self.mid_block1 = block_klass(mid_dim, mid_dim)
-        # self.mid_block1 = ConvMixerBlock(mid_dim, depth=2, k=5)
+        # self.mid_block1 = block_klass(mid_dim, mid_dim)
+        self.mid_block1 = ConvMixerBlock(mid_dim, depth=2, k=5)
         self.mid_attn = Residual(PreNorm(self.groups, mid_dim, Attention(mid_dim)))
-        self.mid_block2 = block_klass(mid_dim, mid_dim)
-        # self.mid_block2 = ConvMixerBlock(mid_dim, depth=2, k=7)
+        # self.mid_block2 = block_klass(mid_dim, mid_dim)
+        self.mid_block2 = ConvMixerBlock(mid_dim, depth=2, k=7)
 
         # attention gate blocks
         self.attention_gate_block = nn.ModuleList([
