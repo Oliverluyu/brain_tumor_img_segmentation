@@ -271,7 +271,9 @@ def main(arguments):
         # loss_fn = nn.BCEWithLogitsLoss()  # Can change Loss Function accordingly for segmentation task!!
         loss_fn = CombinedLoss(weight_bce=0.5, weight_dice=0.5)
         # initialize optimizer excluding frozen parameters
-        optimizer = optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=1e-4, weight_decay=1e-5)
+        #optimizer = optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=1e-4, weight_decay=1e-5)
+        # zhw
+        optimizer = optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=1e-3, weight_decay=1e-5)
         scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=10,
                                                     gamma=0.5)  # Decay LR by a factor of 0.5 every 10 epochs
 

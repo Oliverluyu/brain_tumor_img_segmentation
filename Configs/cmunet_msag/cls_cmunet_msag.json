@@ -1,6 +1,7 @@
 {
   "training": {
     "task": "classification",
+    "transfer_learning": false,
     "epochs": 20,
     "lr_policy": "step",
     "lr_decay_iters": 250,

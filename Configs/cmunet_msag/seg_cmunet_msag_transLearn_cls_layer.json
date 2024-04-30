@@ -2,10 +2,12 @@
   "training": {
     "task": "segmentation",
     "transfer_learning": true,
-    "epochs": 20,
+    "epochs": 30,
     "lr_policy": "step",
     "lr_decay_iters": 250,
-    "preloadData": true
+    "preloadData": true,
+    "freeze": false,
+    "gradually_unfreeze": false
   },
   "data": {
     "root_dir": "/root/autodl-tmp/datasets/segmentation",
@@ -22,8 +24,9 @@
     "in_channels": 3,
     "is_batchnorm": true,
     "save_model_name": "cmunet_msag_best_segmentation_with_transLearn_cls_layer.pth",
-    "pretrained_model": "cmunet_best_classification.pth",
-    "transfer_layers": ["conv1", "conv2", "conv3", "conv4", "center","ConvMixer"]
+    "pretrained_model": "cmunet_msag_best_classification.pth",
+    "transfer_layers": ["conv1", "conv2", "conv3", "conv4", "center","ConvMixer"],
+    "frozen_layers": []
   },
   "transform": {
     "img_shape": [224, 224],
